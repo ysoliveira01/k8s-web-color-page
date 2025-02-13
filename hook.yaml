@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pre-message-hook
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      containers:
+      - name: post-message
+        image: curlimages/curl:latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            curl -X POST -H "Content-Type: application/json" \
+            -d '{"message": "PreSync Application!"}' \
+            https://webhook.site/129b18cf-1188-436c-8cc5-15459756e18e
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: post-message-hook-
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+      - name: post-message
+        image: curlimages/curl:latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            curl -X POST -H "Content-Type: application/json" \
+            -d '{"message": "PostSync Application!"}' \
+            https://webhook.site/129b18cf-1188-436c-8cc5-15459756e18e
+      restartPolicy: Never
